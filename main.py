@@ -12,7 +12,14 @@ def get_currency_list():
 
 def convert_currency():
     try:
-        amount = float(entry_amount.get())
+        amount_text = entry_amount.get().strip()
+        if not amount_text:
+            messagebox.showerror("Ошибка", "Введите сумму для конвертации.")
+            return
+        amount = float(amount_text)
+        if amount <= 0:
+            messagebox.showerror("Ошибка", "Сумма должна быть больше нуля.")
+            return
         base = base_currency.get()
         target = target_currency.get()
         url = f"https://api.exchangerate-api.com/v4/latest/{base}"
@@ -49,7 +56,7 @@ target_currency = ttk.Combobox(root, values=currencies)
 target_currency.pack()
 target_currency.set("RUB")
 
-convert_button = Button(root, text="Конвертировать", command=convert_currency)
+convert_button = ttk.Button(root, text="Конвертировать", command=convert_currency)
 convert_button.pack(pady=10)
 
 result_label = Label(root, text="")
