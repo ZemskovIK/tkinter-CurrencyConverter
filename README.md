@@ -14,7 +14,7 @@ Tkinter-CurrencyConverter — простое приложение для кон�
 ## 📚 Установка и запуск
 1. **Клонируйте репозиторий:**
    ```sh
-   git clone https://github.com/yourusername/CurrencyConverter-Tk.git
+   git clone https://github.com/zemskovik/CurrencyConverter-Tk.git
    cd tkinter-CurrencyConverter
 
 2. **Установите зависимости:**
