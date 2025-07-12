@@ -68,6 +68,12 @@ class CurrencyConverter:
         self.base_currency = ttk.Combobox(self.root, values=self.currencies)
         self.base_currency.pack()
         self.base_currency.set("USD")
+        
+        ttk.Button(
+            self.root, 
+            text="Поменять местами", 
+            command=self.swap_currencies
+        ).pack(pady=5)
 
         Label(self.root, text="Целевая валюта:").pack()
         self.target_currency = ttk.Combobox(self.root, values=self.currencies)
@@ -80,6 +86,12 @@ class CurrencyConverter:
 
         self.result_label = Label(self.root, text="")
         self.result_label.pack()
+        
+    def swap_currencies(self):
+        current_base = self.base_currency.get()
+        current_target = self.target_currency.get()
+        self.base_currency.set(current_target)
+        self.target_currency.set(current_base)
 
 def main():
     root = Tk()
