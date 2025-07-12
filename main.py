@@ -2,64 +2,90 @@ from tkinter import *
 from tkinter import ttk, messagebox
 import requests
 
-def get_currency_list():
-    try:
-        url = "https://api.exchangerate-api.com/v4/latest/RUB"
-        response = requests.get(url).json()
-        return list(response["rates"].keys())  
-    except:
-        return ["USD", "EUR", "RUB"]
+class CurrencyConverter:
+    API_URL = "https://api.exchangerate-api.com/v4/latest/"
+    DEFAULT_CURRENCIES = ["USD", "EUR", "RUB"]
 
-def convert_currency():
-    try:
-        amount_text = entry_amount.get().strip()
+    def __init__(self, root):
+        self.root = root
+        self.currencies = self.get_currency_list()
+        self.setup_ui()
+
+    def get_currency_list(self):
+        try:
+            response = requests.get(f"{self.API_URL}RUB")
+            return list(response.json()["rates"].keys())
+        except:
+            return self.DEFAULT_CURRENCIES
+
+    def convert_currency(self):
+        try:
+            amount = self.validate_amount()
+            base = self.base_currency.get()
+            target = self.target_currency.get()
+
+            rate = self.get_exchange_rate(base, target)
+            converted_amount = amount * rate
+            
+            self.result_label.config(
+                text=f"{amount:.2f} {base} = {converted_amount:.2f} {target}"
+            )
+        except ValueError:
+            messagebox.showerror("Ошибка", "Введите корректное число.")
+        except:
+            messagebox.showerror("Ошибка", "Не удалось получить курсы валют.")
+
+    def validate_amount(self):
+        amount_text = self.entry_amount.get().strip()
         if not amount_text:
-            messagebox.showerror("Ошибка", "Введите сумму для конвертации.")
-            return
+            raise ValueError("Введите сумму для конвертации.")
+        
         amount = float(amount_text)
         if amount <= 0:
-            messagebox.showerror("Ошибка", "Сумма должна быть больше нуля.")
-            return
-        base = base_currency.get()
-        target = target_currency.get()
-        url = f"https://api.exchangerate-api.com/v4/latest/{base}"
-        response = requests.get(url).json()
-        if target in response["rates"]:
-            rate = response["rates"][target]
-            converted_amount = amount * rate
-            result_label.config(text=f"{amount} {base} = {converted_amount:.2f} {target}")
-        else:
+            raise ValueError("Сумма должна быть больше нуля.")
+        
+        return amount
+
+    def get_exchange_rate(self, base_currency, target_currency):
+        response = requests.get(f"{self.API_URL}{base_currency}")
+        rates = response.json()["rates"]
+
+        if target_currency not in rates:
             messagebox.showerror("Ошибка", "Выбранная валюта недоступна.")
-    except ValueError:
-        messagebox.showerror("Ошибка", "Введите корректное число.")
-    except:
-        messagebox.showerror("Ошибка", "Не удалось получить курсы валют.")
+        
+        return rates[target_currency]
 
-root = Tk()
-root.title("Конвертер валют")
-root.geometry("300x250+600+200")
-root.iconbitmap(default="./currency.ico")
+    def setup_ui(self):
+        self.root.title("Конвертер валют")
+        self.root.geometry("350x250+600+200")
+        self.root.iconbitmap(default="./currency.ico")
 
-currencies = get_currency_list()
+        Label(self.root, text="Сумма:").pack()
+        self.entry_amount = Entry(self.root)
+        self.entry_amount.pack()
 
-Label(root, text="Сумма:").pack()
-entry_amount = Entry(root)
-entry_amount.pack()
+        Label(self.root, text="Исходная валюта:").pack()
+        self.base_currency = ttk.Combobox(self.root, values=self.currencies)
+        self.base_currency.pack()
+        self.base_currency.set("USD")
 
-Label(root, text="Исходная валюта:").pack()
-base_currency = ttk.Combobox(root, values=currencies)
-base_currency.pack()
-base_currency.set("USD")
+        Label(self.root, text="Целевая валюта:").pack()
+        self.target_currency = ttk.Combobox(self.root, values=self.currencies)
+        self.target_currency.pack()
+        self.target_currency.set("RUB")
 
-Label(root, text="Целевая валюта:").pack()
-target_currency = ttk.Combobox(root, values=currencies)
-target_currency.pack()
-target_currency.set("RUB")
+        ttk.Button(
+            self.root, text="Конвертировать", command=self.convert_currency
+        ).pack(pady=10)
 
-convert_button = ttk.Button(root, text="Конвертировать", command=convert_currency)
-convert_button.pack(pady=10)
+        self.result_label = Label(self.root, text="")
+        self.result_label.pack()
 
-result_label = Label(root, text="")
-result_label.pack()
+def main():
+    root = Tk()
+    app = CurrencyConverter(root)
+    root.mainloop()
 
-root.mainloop()
+
+if __name__ == "__main__":
+    main()
